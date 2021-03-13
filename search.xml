@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>disk test</title>
+    <url>/2021/03/10/disk-test/</url>
+    <content><![CDATA[<p>最近看&lt;&lt;大话存储&gt;&gt;这本书，书中硬件架构部分的东西触及不到，认识不深刻，为了对于磁盘性能有接触，云上试用了两台服务器，对其性能指标进行测试。</p>
+<ul>
+<li>1.性能指标<br>iops，shorted for input output per sencond,每秒读写的次数<br>吞吐量，每秒磁盘写入及读出的数据量<br>时延，单个读写操作被处理的时间</li>
+<li>2.性能测试工具<br>fio:该命令参数较多，可以测试随机写，随机读，混合随机读写等，写吞吐量，读吞吐量等，切记，fio写命令尽量不要在系统盘测试，会破坏文件系统，造成不可挽回的失误</li>
+</ul>
+<p>dd:该命令比较简单,能大致获取读写速率<br>写：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">time dd if&#x3D;&#x2F;dev&#x2F;zero of&#x3D;test.file bs&#x3D;1M count&#x3D;2 oflag&#x3D;direct</span><br></pre></td></tr></table></figure>
+<p>读：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">time dd if&#x3D;test.file of&#x3D;&#x2F;dev&#x2F;null  iflag&#x3D;direct</span><br></pre></td></tr></table></figure>
+<ul>
+<li>3.磁盘性能监控<br>top命令中的wa值用来判断磁盘IO性能<br>sar命令(yum -y install sysstat)<br>iostat命令<br>ioping磁盘IO的延迟监测工具<br>关于这些命令各指标的含义，有时间出一篇文章详细说明</li>
+</ul>
+]]></content>
+      <tags>
+        <tag>disk</tag>
+        <tag>performance</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>openssl experiment</title>
+    <url>/2021/03/10/openssl-experiment/</url>
+    <content><![CDATA[<p>k8s中各组件与master的通讯使用http，如果apiserver需要对外提供服务，则应该使用安全系数更高的https,k8s提供基于CA签名的双向数字证书认证方式和简单基于HTTP BASE 或TOKEN的认证方式，CA证书的安全性最高，基于此，openssl的TLS证书相关理论对入门者来说是必须，本文参考《openssl-cookbook》，实践大多源于此书。</p>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># wget https://www.openssl.org/source/openssl-1.1.1g.tar.gz</span></span><br><span class="line"><span class="comment"># ./config \</span></span><br><span class="line">  --prefix=/opt/openssl \</span><br><span class="line">  --openssldir=/opt/openssl \</span><br><span class="line">  no-shared \</span><br><span class="line">  -DOPENSSL_TLS_SECURITY_LEVEL=2 \</span><br><span class="line">  enable-ec_nistp_64_gcc_128</span><br><span class="line"> <span class="comment"># make &amp;&amp; make install</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### 生成RSA key</span></span><br><span class="line"></span><br><span class="line">``` bash</span><br><span class="line"><span class="comment"># openssl genpkey -out fd.key \</span></span><br><span class="line">  -algorithm RSA \</span><br><span class="line">  -pkeyopt rsa_keygen_bits:2048 \</span><br><span class="line">  -aes-128-cbc</span><br><span class="line">输入密码：</span><br></pre></td></tr></table></figure>
+
+<p>查看rsa格式：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># openssl pkey -in fd.key -text -noout</span></span><br></pre></td></tr></table></figure>
+
+<p>生成共钥匙：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># openssl pkey -in fd.key -pubout -out fd-public.key</span></span><br></pre></td></tr></table></figure>
+
+<p>生成证书请求CSR,输入交互式的信息：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># openssl req -new -key fd.key -out fd.csr</span></span><br></pre></td></tr></table></figure>
+<p>（CSR creation is usually an interactive process during which you’ll be providing the elements of the certificate distinguished name. Read the instructions given by the openssl tool careful- ly; if you want a field to be empty, you must enter a single dot (.) on the line, rather than just hit Return. If you do the latter, OpenSSL will populate the corresponding CSR field with the default value. (This behavior doesn’t make any sense when used with the default OpenSSL configuration, which is what virtually everyone does. It does make sense once you realize you can actually change the defaults, either by modifying the OpenSSL configuration or by pro- viding your own configuration files.)）<br>According to Section 5.4.1 of RFC 2985,12 challenge password is an optional field that was intended for use during certificate revocation as a way of identifying the original entity that had requested the certificate. If entered, the password will be included verbatim in the CSR and communicated to the CA. It’s rare to find a CA that relies on this field; all instructions I’ve seen recommend leaving it alone. Having a challenge password does not increase the security of the CSR in any way. Further, this field should not be confused with the key passphrase, which is a separate feature</p>
+<p>检查证书请求</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># openssl req -text -in fd.csr -noout</span></span><br></pre></td></tr></table></figure>
+<p>生成自签证书：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># openssl x509 -req -days 365 -in fd.csr -signkey fd.key -out fd.crt</span></span><br></pre></td></tr></table></figure>
+<p>You don’t actually have to create a CSR in a separate step. The following command creates a self-signed certificate starting with a key alone:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># openssl req -new -x509 -days 365 -key fd.key -out fd.crt</span></span><br></pre></td></tr></table></figure>
+<p>If you don’t wish to be asked any questions, use the -subj switch to provide the certificate<br>subject information on the command line:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># openssl req -new -x509 -days 365 -key fd.key -out fd.crt \</span></span><br><span class="line">   -subj <span class="string">&quot;/C=GB/L=London/O=Feisty Duck Ltd/CN=www.feistyduck.com&quot;</span></span><br></pre></td></tr></table></figure>
+
+
+]]></content>
+      <categories>
+        <category>kubernetes</category>
+      </categories>
+      <tags>
+        <tag>kubernetes</tag>
+        <tag>openssl</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>pod</title>
+    <url>/2021/03/10/pod/</url>
+    <content><![CDATA[<p>1.如果pod中运行两个容器，这两个容器的相当于在pod上ip运行，要注意端口是否有冲突</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># cat pod2container.yaml</span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: Pod</span><br><span class="line">metadata:</span><br><span class="line">   name: tomcat</span><br><span class="line">   labels:</span><br><span class="line">      app: tomcat</span><br><span class="line">spec:</span><br><span class="line">  containers:</span><br><span class="line">        - name: nginx</span><br><span class="line">          image: nginx:latest</span><br><span class="line">          ports:</span><br><span class="line">          - containerPort: 8080</span><br><span class="line">        - name: t2</span><br><span class="line">          image: tomcat:8.0</span><br><span class="line">          ports:</span><br><span class="line">          - containerPort: 9090</span><br><span class="line"># kuberctl get pods -o wide</span><br><span class="line"># curl http:&#x2F;&#x2F;ip:8080</span><br><span class="line"># curl http:&#x2F;&#x2F;ip:80</span><br></pre></td></tr></table></figure>
+<p>2.静态pod<br>静态pod直接由某个节点上的kubelet程序进行管理，不需要api server介入，可以通过配置文件方式和http方式<br>3.pod中使用configmap的环境变量</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># cat conpod.yaml</span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: ConfigMap</span><br><span class="line">metadata:</span><br><span class="line">  name: cm-appvars</span><br><span class="line">data:</span><br><span class="line">   apploglevel: info</span><br><span class="line">   appdatadir: &#x2F;var&#x2F;data</span><br><span class="line">cat podconfig.yaml</span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: Pod</span><br><span class="line">metadata:</span><br><span class="line">  name: cm-test-pod</span><br><span class="line">spec:</span><br><span class="line">  containers:</span><br><span class="line">  - name: cm-test</span><br><span class="line">    image: tomcat:8.0</span><br><span class="line">    command: [ &quot;&#x2F;bin&#x2F;sh&quot;,&quot;-c&quot;,&quot;env | grep APP&quot; ]</span><br><span class="line">    env:</span><br><span class="line">    - name: APPLOGLEVEL</span><br><span class="line">      valueFrom:</span><br><span class="line">       configMapKeyRef:</span><br><span class="line">         name: cm-appvars</span><br><span class="line">         key: apploglevel</span><br><span class="line">    - name: APPDATADIR</span><br><span class="line">      valueFrom:</span><br><span class="line">       configMapKeyRef:</span><br><span class="line">         name: cm-appvars</span><br><span class="line">         key: appdatadir</span><br><span class="line"># kubctl logs cm-test-pod</span><br></pre></td></tr></table></figure>
+<p>4.在容器内获取Pod信息(Downward API)<br>5.Pod的生命周期(RestartPolicy)<br>6.Pod健康检查-探针(LivenessProbe和ReadinessProbe)<br>7.pod亲和性反亲和性topology污点容忍<br>8.DaemonSet在每个node上调度一个Pod</p>
+]]></content>
+      <categories>
+        <category>kubernetes</category>
+      </categories>
+      <tags>
+        <tag>kubernetes</tag>
+        <tag>openssl</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>iptables</title>
+    <url>/2021/03/13/iptables/</url>
+    <content><![CDATA[<p>1.禁止ping</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">iptables -t filter -I INPUT -p icmp -j REJECT</span><br><span class="line">iptables -L (默认是filter表)</span><br><span class="line">Chain INPUT (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">REJECT     icmp --  anywhere             anywhere             reject-with icmp-port-unreachable</span><br></pre></td></tr></table></figure>
+<p>2.去除禁ping</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">iptables -t filter -D INPUT -p icmp -j REJECT</span><br></pre></td></tr></table></figure>
+<p>3.禁用某一地址</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">iptables -I INPUT -s 10.211.55.2 -j </span><br><span class="line">iptables -I INPUT -s 10.211.55.0&#x2F;24 -j REJECT</span><br></pre></td></tr></table></figure>
+<p>4.物理接口的设置</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">iptables -I INPUT -i eth0 -j DROP</span><br></pre></td></tr></table></figure>
+<p>5.设置协议的某些端口应用</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">iptables -I INPUT -s 10.211.55.2 -p tcp --dport 80 -j ACCEPT</span><br><span class="line">iptables -I INPUT -s 10.211.55.2 -p tcp --dport 22 -j REJECT</span><br></pre></td></tr></table></figure>
+<p>6.设置TCP的某一种类型的包</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">iptables -I INPUT -i eth0 -p tcp --tcp-flags SYN,RST,ACK SYN -j DROP</span><br></pre></td></tr></table></figure>
+<p>当前已经远程连接的ssh不受影响，但是重新握手会失败，连接不上<br>7.单项ping的控制</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">iptables -I INPUT -p icmp --icmp-type 8 -j DROP</span><br></pre></td></tr></table></figure>
+<p>icmp请求是8，应答是0,自己可以单向ping其他机器<br>8.一次放行多个端口</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">iptables -A INPUT -p tcp -m multiport --dport 80,21,22 -j DROP</span><br></pre></td></tr></table></figure>
+<p>9.多IP的设置</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">iptables -A INPUT -p tcp -m iprange --src-range 10.211.55.2 10.211.55.8 -j DROP</span><br></pre></td></tr></table></figure>
+<p> 10.tcp连接中状态的设置<br> <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">iptables -I INPUT -p tcp -m state --state ESTABLISHED,RELATED -j ACCEPT</span><br></pre></td></tr></table></figure><br> 11.常用网络配置<br> <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"> IPT&#x3D;&quot;&#x2F;sbin&#x2F;iptables&quot;</span><br><span class="line">$IPT --delete-chain</span><br><span class="line">$IPT --flush</span><br><span class="line">$IPT -P INPUT DROP    #1</span><br><span class="line">$IPT -P FORWARD DROP  #1</span><br><span class="line">$IPT -P OUTPUT DROP   #1</span><br><span class="line">$IPT -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT #2</span><br><span class="line">$IPT -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT #3</span><br><span class="line">$IPT -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT #3</span><br><span class="line">$IPT -A INPUT -p tcp -m tcp --dport 21 -j ACCEPT  #3</span><br><span class="line">$IPT -A INPUT -p tcp -m tcp --dport 873 -j ACCEPT #3</span><br><span class="line">$IPT -A INPUT -i lo -j ACCEPT #4</span><br><span class="line">$IPT -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT  #5</span><br><span class="line">$IPT -A INPUT -p icmp -m icmp --icmp-type 11 -j ACCEPT #5</span><br><span class="line">$IPT -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT #6</span><br><span class="line">$IPT -A OUTPUT -p udp -m udp --dport 53 -j ACCEPT #7</span><br><span class="line">$IPT -A OUTPUT -o lo -j ACCEPT #4</span><br><span class="line">$IPT -A OUTPUT -p tcp -m tcp --dport 80 -j ACCEPT #8</span><br><span class="line">$IPT -A OUTPUT -p tcp -m tcp --dport 25 -j ACCEPT #9</span><br><span class="line">$IPT -A OUTPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT  #10</span><br><span class="line">$IPT -A OUTPUT -p icmp -m icmp --icmp-type 11 -j ACCEPT #10</span><br><span class="line">service iptables save</span><br><span class="line">service iptables restart</span><br><span class="line">存为脚本iptables.sh，执行sh iptables.sh自动配置防火墙。</span><br><span class="line">解释：</span><br><span class="line">#1、设置INPUT,FORWARD,OUTPUT链默认target为DROP，也就是外部与服务器不能通信。</span><br><span class="line">#2、设置当连接状态为RELATED和ESTABLISHED时，允许数据进入服务器。</span><br><span class="line">#3、设置外部客户端连接服务器端口80,22,21,873。</span><br><span class="line">#4、允许内部数据循回。</span><br><span class="line">#5、允许外部ping服务器 。</span><br><span class="line">#6、设置状态为RELATED和ESTABLISHED的数据可以从服务器发送到外部。</span><br><span class="line">#7、允许服务器使用外部dns解析域名。</span><br><span class="line">#8、设置服务器连接外部服务器端口80。</span><br><span class="line">#9、允许服务器发送邮件。</span><br><span class="line">#10、允许从服务器ping外部。</span><br></pre></td></tr></table></figure><br> 脚本转自：<a href="https://www.centos.bz/2011/09/example-webserver-iptable-ruleset/">https://www.centos.bz/2011/09/example-webserver-iptable-ruleset/</a></p>
+]]></content>
+      <tags>
+        <tag>防火墙</tag>
+        <tag>网络</tag>
+      </tags>
+  </entry>
+</search>
