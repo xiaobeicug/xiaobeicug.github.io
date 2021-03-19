@@ -28,7 +28,7 @@
 <meta property="og:description" content="《jenkins权威指南读书笔记》">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-03-15T08:57:56.000Z">
-<meta property="article:modified_time" content="2021-03-16T04:44:11.786Z">
+<meta property="article:modified_time" content="2021-03-19T04:18:52.131Z">
 <meta property="article:author" content="肖贝">
 <meta property="article:tag" content="自动发布">
 <meta property="article:tag" content="jenkins">
@@ -206,7 +206,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-03-16 12:44:11" itemprop="dateModified" datetime="2021-03-16T12:44:11+08:00">2021-03-16</time>
+                <time title="修改时间：2021-03-19 12:18:52" itemprop="dateModified" datetime="2021-03-19T12:18:52+08:00">2021-03-19</time>
               </span>
 
           
@@ -228,7 +228,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>选择一个LTS(long time support)jenkins版本<br>夜间构建+自动化测试+度量指标<br>1.jenkins的目录结构<br> build目录存放所有构建数据，历史记录，可以迁移使用，历史数据过多可以设置Discard old buildings保留策略管理<br> jobs目录中包含配置运行的job，以xml形式显示<br>2.变量引用<br> 系统配置-&gt;全局属性中可以定义变量，在构建配置中可以使用${varname}来使用变量<br>3.调整触发构建的变化<br>  include path和exclude path匹配正则表达式，识别不该触发构建的文件</p>
+        <p>选择一个LTS(long time support)jenkins版本<br>夜间构建+自动化测试+度量指标<br>1.jenkins的目录结构<br> build目录存放所有构建数据，历史记录，可以迁移使用，历史数据过多可以设置Discard old buildings保留策略管理<br> jobs目录中包含配置运行的job，以xml形式显示<br>2.变量引用<br> 系统配置-&gt;全局属性中可以定义变量，在构建配置中可以使用${varname}来使用变量<br>3.调整触发构建的规则<br>  include path和exclude path匹配正则表达式，识别不该触发构建的文件，或者哪些用户的限制<br>4.各种插件<br>  构建通知邮件，即时消息，代码复杂度静态检查等<br>5.构建参数<br>  参数的设置，获取及传递，一般用于手动触发构建<br>6.多重结构的构建作业<br>  多组有效组合进行构建，节点设置标签(如数据库，操作系统)，可以设置无效的过滤器<br>7.依赖关系图<br>8.汇总测试结果<br>  需要饱含相同指纹构建的产物<br>9.分布式架构<br>  从节点的安装方式有两种，ssh，JNLP(拷贝slave.jar包，命令行启动)，正则表达式匹配可以运行的节点<br>10.监控<br>  磁盘监控disk-usage插件，计算资源监控monit插件<br>11.jenkins备份<br>  workspace目录无需备份，如果丢失会自动生成，build是构建的历史记录,backup和thinback插件都可以，定期备份策略及恢复到指定版本<br>  项目归档–手动操作<br>  jenkins的迁移<br>12.自动化测试<br>本书阅读完毕，maven使用部分没有吃透，还可以看第二遍，有时间可以参加CJE和CCJE的线上考试，价格99$,后续要读的书：<br><a target="_blank" rel="noopener" href="https://github.com/PacktPublishing/Continuous-Delivery-with-Docker-and-Jenkins-Second-Edition/">https://github.com/PacktPublishing/Continuous-Delivery-with-Docker-and-Jenkins-Second-Edition/</a><br>期待有更大的收获。。。    </p>
 
     </div>
 
