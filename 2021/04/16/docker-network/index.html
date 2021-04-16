@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="对于docker网络的跨主机互联的深入研究及实践">
+<meta property="og:type" content="article">
+<meta property="og:title" content="docker-network">
+<meta property="og:url" content="http://example.com/2021/04/16/docker-network/index.html">
+<meta property="og:site_name" content="肖贝">
+<meta property="og:description" content="对于docker网络的跨主机互联的深入研究及实践">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-04-16T08:09:57.000Z">
+<meta property="article:modified_time" content="2021-04-16T14:17:21.274Z">
+<meta property="article:author" content="肖贝">
+<meta property="article:tag" content="docker">
+<meta property="article:tag" content="network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/04/16/docker-network/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>docker-network | 肖贝</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?aa02e38c9b84fc0d46303cda2ff8947e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">肖贝</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/16/docker-network/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="肖贝">
+      <meta itemprop="description" content="培养优秀的习惯">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="肖贝">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          docker-network
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-04-16 16:09:57 / 修改时间：22:17:21" itemprop="dateCreated datePublished" datetime="2021-04-16T16:09:57+08:00">2021-04-16</time>
+            </span>
+
+          
+            <span id="/2021/04/16/docker-network/" class="post-meta-item leancloud_visitors" data-flag-title="docker-network" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+            <div class="post-description">对于docker网络的跨主机互联的深入研究及实践</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>1.实践准备<br>三台主机：<br>192.168.71.128 node01<br>192.168.71.129 node02<br>192.168.71.130 node03</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># wget https:&#x2F;&#x2F;releases.hashicorp.com&#x2F;consul&#x2F;1.9.4&#x2F;consul_1.9.4_linux_amd64.zip</span><br><span class="line"># unzip consul_1.9.4_linux_amd64.zip</span><br><span class="line"># mv consul &#x2F;usr&#x2F;local&#x2F;bin</span><br></pre></td></tr></table></figure>
+<p>三台机器对修改consul配置文件consul_config_json,并修改server_name</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"># cat consul_config.json</span><br><span class="line">&#123;</span><br><span class="line">&quot;advertise_addr&quot;:&quot;192.168.71.129&quot;,</span><br><span class="line">&quot;bind_addr&quot;:&quot;192.168.71.129&quot;,</span><br><span class="line">&quot;data_dir&quot;:&quot;&#x2F;temp&#x2F;consul&quot;,</span><br><span class="line">&quot;server&quot;:true,</span><br><span class="line">&quot;node_name&quot;:&quot;server2&quot;,</span><br><span class="line">&quot;enable_syslog&quot;:true,</span><br><span class="line">&quot;enable_debug&quot;:true,</span><br><span class="line">&quot;log_level&quot;:&quot;info&quot;,</span><br><span class="line">&quot;bootstrap_expect&quot;:3,</span><br><span class="line">&quot;start_join&quot;:[&quot;192.168.71.128&quot;,&quot;192.168.71.129&quot;,&quot;192.168.71.130&quot;],</span><br><span class="line">&quot;retry_join&quot;:[&quot;192.168.71.128&quot;,&quot;192.168.71.129&quot;,&quot;192.168.71.130&quot;],</span><br><span class="line">&quot;ui&quot;:true,</span><br><span class="line">&quot;client_addr&quot;:&quot;0.0.0.0&quot;,</span><br><span class="line">&quot;datacenter&quot;:&quot;consulnet&quot;</span><br><span class="line">&#125;</span><br><span class="line"># consul agent -config-dir &#x2F;tmp&#x2F;consul_config   &#x2F;&#x2F;start  ctrl+z bg 后台运行</span><br><span class="line"># consul operator raft list-peers &#x2F;&#x2F;查看节点状态</span><br></pre></td></tr></table></figure>
+<p>由于配置文件打开了UI，consul的状态可以浏览器中查看，localhost:8500<br>2.创建网络<br>实验采用overlay网络跨主机互联</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># docker network create --driver overlay consulnet</span><br><span class="line"># docker network ls</span><br><span class="line"># docker run -it -d --name test_net1 --network consulnet1 busybox</span><br></pre></td></tr></table></figure>
+<p>依次在node02，node03上创建容器test_net2，test_net3<br>还可以指定子网：</p>
+<h1 id="docker-network-create-–driver-overlay-–subnet-10-20-20-0-24-cosulnet1"><a href="#docker-network-create-–driver-overlay-–subnet-10-20-20-0-24-cosulnet1" class="headerlink" title="docker network create –driver overlay –subnet 10.20.20.0/24 cosulnet1"></a>docker network create –driver overlay –subnet 10.20.20.0/24 cosulnet1</h1><p>进入各容器，互相ping容器名，可以通</p>
+<h1 id="ping-test-net2"><a href="#ping-test-net2" class="headerlink" title="ping test_net2"></a>ping test_net2</h1><p>3.原理深入<br>为支持容器跨主机通信, Docker 提供了 overlay driver , 使用户可以创建基于VxLAN的overlay网络.VxLAN 可以将二层数据封装到UDP进行传输, VxLAN 提供与 VLAN 相同的以太网二层服务, 但是拥有更强的扩展性和灵活性.overlay网络 需要一个key-value 数据库用于保存网络状态信息, 包括 Network, Endpoint, IP 等,consul, etcd, zookeeper 都是docker支持的 key-value 软件,从Docker1.12开始，Docker使用内部的Key-Value存储去创建Swarm和overlay网络.<br>Virtual Extensible LAN (VXLAN) is a network virtualization technology that attempts to improve the scalability problems associated with large cloud computing deployments.<br>VXLAN是一项通道技术，它将L2（链路层）的网络帧包装在UDP包里面并通过4789端口发送出去，这项技术最开始是被VMWare，Arista和思科一起开发的。VXLAN的主要目标是简化需要在L2层多租户的云部署。它提供：</p>
+<ul>
+<li>通过在L3上构建通道传输L2以避免群集中所有主机之间的L2连接的必要性</li>
+<li>可以超过4096个独立的网络（VLAN ID的数量被限制为不能大于4096）</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">[root@kube-master ~]# docker exec test_net1 ip addr show</span><br><span class="line">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue qlen 1</span><br><span class="line">    link&#x2F;loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00</span><br><span class="line">    inet 127.0.0.1&#x2F;8 scope host lo</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">    inet6 ::1&#x2F;128 scope host</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">13: eth0@if14: &lt;BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN&gt; mtu 1450 qdisc noqueue</span><br><span class="line">    link&#x2F;ether 02:42:0a:14:14:02 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 10.20.20.2&#x2F;24 scope global eth0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">    inet6 fe80::42:aff:fe14:1402&#x2F;64 scope link</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">15: eth1@if16: &lt;BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN&gt; mtu 1500 qdisc noqueue</span><br><span class="line">    link&#x2F;ether 02:42:ac:12:00:03 brd ff:ff:ff:ff:ff:ff</span><br><span class="line">    inet 172.18.0.3&#x2F;16 scope global eth1</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">    inet6 fe80::42:acff:fe12:3&#x2F;64 scope link</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">[root@kube-master ~]# docker exec test_net1 ip route show</span><br><span class="line">default via 172.18.0.1 dev eth1</span><br><span class="line">10.20.20.0&#x2F;24 dev eth0 scope link  src 10.20.20.2</span><br><span class="line">172.18.0.0&#x2F;16 dev eth1 scope link  src 172.18.0.3</span><br></pre></td></tr></table></figure>
+<p>容器中访问外部走桥接网卡，10网段之间访问走overlay网卡<br>使用tcpdump验证vxlan的通信过程,在test_net2中ping 10.10.20.2,node01上tcpdump抓包，tcpdump -pni eth0 “port 4789”</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">21:05:35.715854 IP 192.168.71.129.49297 &gt; 192.168.71.128.4789: VXLAN, flags [I] (0x08), vni 257</span><br><span class="line">IP 10.20.20.3 &gt; 10.20.20.2: ICMP echo request, id 4352, seq 0, length 64</span><br><span class="line">21:05:35.716389 IP 192.168.71.128.58844 &gt; 192.168.71.129.4789: VXLAN, flags [I] (0x08), vni 257</span><br><span class="line">IP 10.20.20.2 &gt; 10.20.20.3: ICMP echo reply, id 4352, seq 0, length 64</span><br></pre></td></tr></table></figure>
+<p>每个包都产生两行信息：<br>外层帧，IP地址为192.168.71.129 和 192.168.71.128（docker宿主机）<br>里层帧，IP地址为10.20.20.3 和 10.20.20.2(我们的容器)<br>继续看看overlay层是如何将ip映射为mac地址的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">overns&#x3D;&#x2F;var&#x2F;run&#x2F;docker&#x2F;netns&#x2F;1-c2f5929a52</span><br><span class="line">nsenter --net&#x3D;$overns tcpdump -pni any &quot;arp&quot;</span><br></pre></td></tr></table></figure>
+<p>test_net4容器新建时没有arp列表,ip neigh show，ping 10.10.20.2，node01宿主机抓包，没有任何arp的包信息<br>node03上重新创建干净的arp列表的test_net4，node03上抓包，nsenter –net=/var/run/docker/netns/1-1b450d1a91 tcpdump -peni any “arp”</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">21:47:50.839200   B 02:42:0a:14:14:05 ethertype ARP (0x0806), length 44: Request who-has 10.20.20.3 tell 10.20.20.5, length 28</span><br><span class="line">21:47:50.839272 Out 02:42:0a:14:14:05 ethertype ARP (0x0806), length 44: Request who-has 10.20.20.3 tell 10.20.20.5, length 28</span><br><span class="line">21:47:50.839280 Out 02:42:0a:14:14:05 ethertype ARP (0x0806), length 44: Request who-has 10.20.20.3 tell 10.20.20.5, length 28</span><br><span class="line">21:47:50.839288   B 02:42:0a:14:14:05 ethertype ARP (0x0806), length 44: Request who-has 10.20.20.3 tell 10.20.20.5, length 28</span><br><span class="line">21:47:50.839304  In 02:42:0a:14:14:03 ethertype ARP (0x0806), length 44: Reply 10.20.20.3 is-at 02:42:0a:14:14:03, length 28</span><br><span class="line">21:47:50.839338 Out 02:42:0a:14:14:03 ethertype ARP (0x0806), length 44: Reply 10.20.20.3 is-at 02:42:0a:14:14:03, length 28</span><br></pre></td></tr></table></figure>
+<p>[root@kube-node3 ~]# nsenter –net=/var/run/docker/netns/1-1b450d1a91  ip neigh show<br>10.20.20.3 dev vxlan1 lladdr 02:42:0a:14:14:03 PERMANENT<br>10.20.20.2 dev vxlan1 lladdr 02:42:0a:14:14:02 PERMANENT<br>继续创建一个test_net6容器，查看ip neigh 信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@kube-node1 ~]#  nsenter --net&#x3D;&#x2F;var&#x2F;run&#x2F;docker&#x2F;netns&#x2F;1-1b450d1a91  ip neigh show</span><br><span class="line">10.20.20.4 dev vxlan1 lladdr 02:42:0a:14:14:04 PERMANENT</span><br><span class="line">10.20.20.5 dev vxlan1 lladdr 02:42:0a:14:14:05 PERMANENT</span><br><span class="line">10.20.20.2 dev vxlan1 lladdr 02:42:0a:14:14:02 PERMANENT</span><br><span class="line">10.20.20.6 dev vxlan1 lladdr 02:42:0a:14:14:06 PERMANENT</span><br></pre></td></tr></table></figure>
+<p>记录被自动添加了，即使目前还没有通信包被发到这个新的容器中。这意味着Docker自动操作在overlay网络命名空间中的ARP记录，并且vxlan网卡充当一个代理去应答ARP请求。<br>查看vxlan1 网卡配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@kube-node1 ~]# nsenter --net&#x3D;&#x2F;var&#x2F;run&#x2F;docker&#x2F;netns&#x2F;1-1b450d1a91 ip -d link show vxlan1</span><br><span class="line">12: vxlan1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1450 qdisc noqueue master br0 state UNKNOWN mode DEFAULT</span><br><span class="line">    link&#x2F;ether 22:47:5c:db:e3:cc brd ff:ff:ff:ff:ff:ff link-netnsid 0 promiscuity 1</span><br><span class="line">    vxlan id 257 srcport 0 0 dstport 4789 proxy l2miss l3miss ageing 300</span><br><span class="line">    bridge_slave state forwarding priority 32 cost 100 hairpin off guard off root_block off fastleave off learning on flood on port_id 0x8001 port_no 0x1 designated_port 32769 designated_cost 0 designated_bridge 8000.22:47:5c:db:e3:cc designated_root 8000.22:47:5c:db:e3:cc hold_timer    0.00 message_age_timer    0.00 forward_delay_timer    0.00 topology_change_ack 0 config_pending 0 proxy_arp off proxy_arp_wifi off mcast_router 1 mcast_fast_leave off mcast_flood on addrgenmode eui64</span><br></pre></td></tr></table></figure>
+<p>MAC地址的获取会是怎样的，查看overlay命名空间里的网桥转发数据库</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">[root@kube-node1 ~]# nsenter --net&#x3D;&#x2F;var&#x2F;run&#x2F;docker&#x2F;netns&#x2F;1-1b450d1a91 bridge fdb show</span><br><span class="line">33:33:00:00:00:01 dev br0 self permanent</span><br><span class="line">01:00:5e:00:00:01 dev br0 self permanent</span><br><span class="line">33:33:ff:9c:6f:3d dev br0 self permanent</span><br><span class="line">22:47:5c:db:e3:cc dev vxlan1 master br0 permanent</span><br><span class="line">22:47:5c:db:e3:cc dev vxlan1 vlan 1 master br0 permanent</span><br><span class="line">02:42:0a:14:14:02 dev vxlan1 dst 192.168.71.128 link-netnsid 0 self permanent</span><br><span class="line">02:42:0a:14:14:04 dev vxlan1 dst 192.168.71.130 link-netnsid 0 self permanent</span><br><span class="line">02:42:0a:14:14:05 dev vxlan1 dst 192.168.71.130 link-netnsid 0 self permanent</span><br><span class="line">02:42:0a:14:14:06 dev vxlan1 dst 192.168.71.130 link-netnsid 0 self permanent</span><br><span class="line">52:7a:ed:06:a3:95 dev veth2 master br0 permanent</span><br><span class="line">52:7a:ed:06:a3:95 dev veth2 vlan 1 master br0 permanent</span><br><span class="line">33:33:00:00:00:01 dev veth2 self permanent</span><br><span class="line">01:00:5e:00:00:01 dev veth2 self permanent</span><br><span class="line">33:33:ff:06:a3:95 dev veth2 self permanent</span><br></pre></td></tr></table></figure>
+<p>我们可以看到docker0容器的MAC地址在数据库里面，并且被标志为permanent。这个信息也是docker动态添加的。<br>接下来查看consul中记录的信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@kube-node1 ~]# net&#x3D;$(docker network inspect cosulnet1  -f &#123;&#123;.Id&#125;&#125;)</span><br><span class="line">curl -s http:&#x2F;&#x2F;localhost:8500&#x2F;v1&#x2F;kv&#x2F;docker&#x2F;network&#x2F;v1.0&#x2F;network&#x2F;$&#123;net&#125;&#x2F; | jq  -r &quot;.[0].Value&quot;  |  base64 -d | jq .</span><br></pre></td></tr></table></figure>
+<p>后续实验：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/a2b94bc9c232">https://www.jianshu.com/p/a2b94bc9c232</a><br>本文参考：<br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/a2b94bc9c232">https://www.jianshu.com/p/a2b94bc9c232</a></p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/docker/" rel="tag"># docker</a>
+              <a href="/tags/network/" rel="tag"># network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/04/15/k8s-network/" rel="prev" title="k8s-network">
+      <i class="fa fa-chevron-left"></i> k8s-network
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#docker-network-create-%E2%80%93driver-overlay-%E2%80%93subnet-10-20-20-0-24-cosulnet1"><span class="nav-number">1.</span> <span class="nav-text">docker network create –driver overlay –subnet 10.20.20.0&#x2F;24 cosulnet1</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ping-test-net2"><span class="nav-number">2.</span> <span class="nav-text">ping test_net2</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="肖贝"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">肖贝</p>
+  <div class="site-description" itemprop="description">培养优秀的习惯</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">肖贝</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              leancloudSelector(url).innerText = 'Counter not initialized! More info at console err msg.';
+              console.error('ATTENTION! LeanCloud counter has security bug, see how to solve it here: https://github.com/theme-next/hexo-leancloud-counter-security. \n However, you can still use LeanCloud without security, by setting `security` option to `false`.');
+            
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"WHjb4q09Dvc200WnyNGQeLmB-gzGzoHsz","app_key":"KNRespEK9Y3yFiulmGkF95gF","server_url":null,"security":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
