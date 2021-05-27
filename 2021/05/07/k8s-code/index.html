@@ -20,16 +20,18 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="培养优秀的习惯">
+  <meta name="description" content="k8s源码架构阅读笔记">
 <meta property="og:type" content="article">
 <meta property="og:title" content="k8s-code">
 <meta property="og:url" content="http://example.com/2021/05/07/k8s-code/index.html">
 <meta property="og:site_name" content="肖贝">
-<meta property="og:description" content="培养优秀的习惯">
+<meta property="og:description" content="k8s源码架构阅读笔记">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-05-07T08:11:44.000Z">
-<meta property="article:modified_time" content="2021-05-07T08:11:44.800Z">
+<meta property="article:modified_time" content="2021-05-07T15:48:53.530Z">
 <meta property="article:author" content="肖贝">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="code">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="http://example.com/2021/05/07/k8s-code/">
@@ -196,8 +198,9 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2021-05-07 16:11:44" itemprop="dateCreated datePublished" datetime="2021-05-07T16:11:44+08:00">2021-05-07</time>
+              <time title="创建时间：2021-05-07 16:11:44 / 修改时间：23:48:53" itemprop="dateCreated datePublished" datetime="2021-05-07T16:11:44+08:00">2021-05-07</time>
             </span>
 
           
@@ -208,6 +211,7 @@
               <span class="post-meta-item-text">阅读次数：</span>
               <span class="leancloud-visitors-count"></span>
             </span>
+            <div class="post-description">k8s源码架构阅读笔记</div>
 
         </div>
       </header>
@@ -218,7 +222,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        
+        <p>1.apiserver<br>API 的URL大致以 /apis/group/version/namespaces/my-ns/myresource 组成</p>
+
     </div>
 
     
@@ -245,6 +250,10 @@
 
 
       <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/code/" rel="tag"># code</a>
+          </div>
 
         
 
@@ -332,7 +341,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-count">28</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -341,7 +350,7 @@
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-count">41</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>

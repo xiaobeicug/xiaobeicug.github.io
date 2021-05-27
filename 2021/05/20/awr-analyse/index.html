@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="awr报告分析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="awr-analyse">
+<meta property="og:url" content="http://example.com/2021/05/20/awr-analyse/index.html">
+<meta property="og:site_name" content="肖贝">
+<meta property="og:description" content="awr报告分析">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-20T02:32:20.000Z">
+<meta property="article:modified_time" content="2021-05-22T15:46:25.642Z">
+<meta property="article:author" content="肖贝">
+<meta property="article:tag" content="oracle">
+<meta property="article:tag" content="awr">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/05/20/awr-analyse/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>awr-analyse | 肖贝</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?aa02e38c9b84fc0d46303cda2ff8947e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">肖贝</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/05/20/awr-analyse/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="肖贝">
+      <meta itemprop="description" content="培养优秀的习惯">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="肖贝">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          awr-analyse
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-05-20 10:32:20" itemprop="dateCreated datePublished" datetime="2021-05-20T10:32:20+08:00">2021-05-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-05-22 23:46:25" itemprop="dateModified" datetime="2021-05-22T23:46:25+08:00">2021-05-22</time>
+              </span>
+
+          
+            <span id="/2021/05/20/awr-analyse/" class="post-meta-item leancloud_visitors" data-flag-title="awr-analyse" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+            <div class="post-description">awr报告分析</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>1.AWR简介<br>基础指标统计<br>SQL和优化器指标<br>os指标<br>等待事件类型<br>时间指标<br>度量<br>ASH Active session History<br>建议器advisor<br>快照指标<br>数据库特性使用情况<br>问题：session hung怎么处理?<br>数据库中MMON(Manageability Monitor Process)和它的小工进程m00x来维护awr,mmon进程hang意味着AWR不可用<br>诸行无常，盛者必衰<br>Sockets：CPU插槽（CPU插槽主要分为Socket、Slot这两种。就是用于安装CPU的插座。）<br>2.重要参数解析<br>Elapse: 拉取报告的时间<br>DB time: 所有前台session花费在database调用上的总和时间<br>   是foregroud sessions<br>   包括CPU时间，IO time和其他一系列非空闲等待时间<br>DB time描绘了数据库的总体负载，但要和elapsed time逝去时间结合<br>AAS:average active session,ash报告开篇即为AAS<br>AAS=DB time/Elapse time &lt;=1 负载轻<br>AAS=DB time/Elapse time &gt; 100 数据库hang<br>DB time + Non-idle wait + wait on cpu queue<br>如果仅有两个逻辑CPU,而2个session在60分钟都没有等待事件，一直跑在CPU上，那么：<br>DB CPU=2<em>60min DB time=2</em>60+0+0=120<br>AAS=120/60=2 正好等于OS load 2<br>如果有3个session都100%消耗CPU,那么总有一个要wait on queue<br>DB CPU=2*60min,wait on CPU queue=60mins<br>AAS=(120+60)/60=3-&gt;主机load也为3，此时vmstat看waiting for run time<br>真实世界中，DB CPU=xx mins Non-idle wait=enq:TX+coursor pin S on X+ latch:xxx + db file sequential read + …<br>有时间vmstat,top,iowait的使用要去找资料详细分析及故障定位<br>有脚本工具拉取7天的DB time，画db time的折线图</p>
+<p>redo size单位bytes,redo size可以用来估量update/insert/delete的频率，大的redo size往往对lgwr写日志，和arch归档造成I/O压力，<br>per transaction可以用来分辨是大量小事物还是少量大事务。<br>Redo size (bytes):    56,318.1    8,353.5      属于不大不小的事物<br>                    1.5MB        6k ,则符合OLTP特征，大量的小事物<br>Logical read单位，次数<em>块数，逻辑读消耗CPU,主频和CPU核数都很重要，逻辑读则DB CPU往往高，也往往看到latch,cache,buffer chain等待<br>Block changes 单位次数</em>块数，描绘数据变化频率<br>Physical Read 单位次数块数，物理读消耗IO,体现在IOPS和吞吐量等不同的纬度上，但减少物理读可能意味着消耗更多的CPU<br>Physical writes单位次数*块数，主要是DBWR写datafile,也有direct path write。dbwr长期写出慢会导致定期的log file switch(check point not complete)检查点无法完成前台等待<br>Parse 解析次数，包括软解析+硬解析，软解析优化得不好，则夸张地说几乎等于每秒SQL执行次数，希望看到的是，解析一次到处运行<br>Hard Parse: 万恶之源，cursor pin s on X,library cache: mutex X,latch:row cache objects/share poll …硬解析最好少于每秒20次<br>时间模型 Time Model Statistics<br>parse time elapsed    474.58    3.59<br>hard parse elapsed time    450.84    3.41     硬解析敏感的<br>Latch Hit%：willing-to wait latch 闩申请不要等待的比例<br>Parse CPU To Parse Elapse:快照内解析CPU的时间和总的时间的比值（parse cpu time/parse elapse time)，若该指标水平很低，那么说明在整个解析过程中，整个在CPU上运算的时间是很短的<br>而主要的解析时间都耗费在各种其他非空闲的等待事件上了<br>%Non-parse CPU非解析CPU比例，公式为DB CPU-parse CPU)/DB CPU，若大多数的CPU都用在解析上了，则可能好钢没用在刀刃上<br>% SQL with executions&gt;1: 提供大致的SQL重用次数，若该数据的比例小于90%，可以使用相关SQL去抓硬编码的非绑定变量的SQL语句<br>db file sequential read 单块读等待，是一种最为常见的物理IO等待事件，这里的sequential指的是将数据块<br>读入到相连续的内存空间中(contiguous memory space)而不是指所读取的数据块是连续的，该等待事件可能在多种场景中发生<br>等待事件有蝴蝶效应</p>
+<p>3.性能优化的多维度理论<br>增加了CPU-&gt;更大的并发量，更多的并发争用<br>调整了IO存储-&gt;更少的IO,更多的CPU计算，更高的CPU使用率<br>Redo写得慢-&gt;影响commit-&gt;造成enq:tx和gc buffer busy等待<br>datafile写得慢-&gt;检查点完不成，日志无法切换，前台DML hang<br>Sequence nocache-&gt;Insert index很容易造成enq:index contention,和row cache lock和enq:SQ<br>5.基础数据的理解<br>Thread(s) per core:    1 //每核可以同时运行的线程，大于1说明使用的超线程<br>Core(s) per socket:    2 // 每个CPU多少核<br>Socket(s):             1 // 1个物理CPU插槽<br>当硬件线程技术打开时，一个CPU core可以作为多个逻辑CPU<br>%Total CPU，该实例所使用的CPU占总CPU的比例-&gt; %of total CPU for instance<br>%Busy CPU，该实例所使用的CPU占总的CPU的比例-&gt;%of busy CPU for instance<br>例如共4个逻辑CPU，其中3个被完全使用，3个钟的1个完全被该实例使用，则%Total CPU=1/4=25%，而%Busy CPU=1/3=33%<br>当CPU高时一般看%Busy CPU可以确定CPU到底是否时本实例消耗的，还是主机上其他称他程序<br>%busy CPU for instance =(DB CPU+backgroud cpu time) /(busy_time/100)<br>% of total CPU for instance = DB CPU+background cpu time)/(BYSY TIE + IDLE_TIME)<br>%DB time waiting for CPU (Resource Manager) =(RSRC_MGR_CPU_WAIT_TIME/100)/DB TIME<br>反映由于resource manager quantum等待的时间,resmgr:cpu quantum等待事件是当resource manager控制CPU调度时，需要控制对应的进程暂时不使用CPU<br>而进程到内部运行队列中，以保证该进程对应 的consumer group(消费组)没有消耗比指定resource manager指令更多的CPU<br>游标绑定变量，游标共享，问题要再仔细看看查<br>connection management call elapsed time     连接耗费的时间<br>failed parse elapse time解析失败，例如由于ORA-04031</p>
+<p>load Profile中的数据：<br>Physical writes单位 次数*块数，主要是DBWR写datafile，也有direct path write, dbwr长期写出慢会导致定期的log file switch(checkpoint no complete)检查点无法完成的前台等待。<br>‘Cursor: pin S on X’ 最常见的等待事件，进程为了共享操作例如执行pin游标而以SHRD S mode申请mutex，但是未立即获得。原因是该游标被其他进程以EXCL X mode 持有了</p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/oracle/" rel="tag"># oracle</a>
+              <a href="/tags/awr/" rel="tag"># awr</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/05/19/strace/" rel="prev" title="strace">
+      <i class="fa fa-chevron-left"></i> strace
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/05/26/asyncio/" rel="next" title="asyncio">
+      asyncio <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="肖贝"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">肖贝</p>
+  <div class="site-description" itemprop="description">培养优秀的习惯</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">肖贝</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              leancloudSelector(url).innerText = 'Counter not initialized! More info at console err msg.';
+              console.error('ATTENTION! LeanCloud counter has security bug, see how to solve it here: https://github.com/theme-next/hexo-leancloud-counter-security. \n However, you can still use LeanCloud without security, by setting `security` option to `false`.');
+            
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"WHjb4q09Dvc200WnyNGQeLmB-gzGzoHsz","app_key":"KNRespEK9Y3yFiulmGkF95gF","server_url":null,"security":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

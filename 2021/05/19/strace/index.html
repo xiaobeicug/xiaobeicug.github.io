@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="strace常见选项，及常见系统调用总结">
+<meta property="og:type" content="article">
+<meta property="og:title" content="strace">
+<meta property="og:url" content="http://example.com/2021/05/19/strace/index.html">
+<meta property="og:site_name" content="肖贝">
+<meta property="og:description" content="strace常见选项，及常见系统调用总结">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-19T08:53:36.000Z">
+<meta property="article:modified_time" content="2021-05-19T15:54:30.687Z">
+<meta property="article:author" content="肖贝">
+<meta property="article:tag" content="operation">
+<meta property="article:tag" content="strace">
+<meta property="article:tag" content="troubleshooting">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/05/19/strace/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>strace | 肖贝</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?aa02e38c9b84fc0d46303cda2ff8947e";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">肖贝</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/05/19/strace/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="肖贝">
+      <meta itemprop="description" content="培养优秀的习惯">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="肖贝">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          strace
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-05-19 16:53:36 / 修改时间：23:54:30" itemprop="dateCreated datePublished" datetime="2021-05-19T16:53:36+08:00">2021-05-19</time>
+            </span>
+
+          
+            <span id="/2021/05/19/strace/" class="post-meta-item leancloud_visitors" data-flag-title="strace" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+            <div class="post-description">strace常见选项，及常见系统调用总结</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>1.常见选项的说明<br>Output format:<br>  -a column      alignment COLUMN for printing syscall results (default 40) //系统调用返回值的位置，默认是40<br>  -i             print instruction pointer at time of syscall //系统调用的入口指针<br>  -o file        send trace output to FILE instead of stderr //输出文件 可以使用 1&gt;filename  2&gt;&amp;1代替<br>  -q             suppress messages about attaching, detaching, etc. //抑制attaching 和detaching的消息，没有太弄明白<br>  -r             print relative timestamp //打印时间戳<br>  -s strsize     limit length of print strings to STRSIZE chars (default 32) //限制长度，实操上没有看到多大变化，没有太弄明白<br>  -t             print absolute timestamp // 打印时间戳，绝对时间，秒级别<br>  -tt            print absolute timestamp with usecs //时间ms级别<br>  -T             print time spent in each syscall //每个系统调用花费的时间，在每行的最后尖括号显示<br>  -x             print non-ascii strings in hex //以十六进制输出非标准字符串，read中的参数变化<br>  -xx            print all strings in hex //十六进制输出所有的字符串<br>  -y             print paths associated with file descriptor arguments //输出描述参数所关联的文件<br>  -yy            print ip:port pairs associated with socket file descriptors //输出socket文件描述匹配的ip:port套接字<br>Statistics:<br>  -c             count time, calls, and errors for each syscall and report summary //系统调用的时间，次数，错误，只打印系统调用产生的报告<br>  -C             like -c but also print regular output //比-c 打印多了strace正常的输出<br>  -O overhead    set overhead for tracing syscalls to OVERHEAD usecs //strace -c -O 3 ls,与-c一起使用，超过3微妙的系统调用报告<br>  -S sortby      sort syscall counts by: time, calls, name, nothing (default time) // 排序  strace -c -S calls  ls,根据调用次数进行排序<br>  -w             summarise syscall latency (default is system time) //与-c一起使用， strace -c  -w  ls,按照时间排序<br>Filtering:<br>  -e expr        a qualifying expression: option=[!]all or option=[!]val1[,val2]… //控制输出哪些函数 strace -e  connect,socket,poll ping <a target="_blank" rel="noopener" href="http://www.baidu.com/">www.baidu.com</a><br>     options:    trace, abbrev, verbose, raw, signal, read, write<br>  -P path        trace accesses to path //跟踪某一路径，不太明白<br>Tracing:<br>  -b execve      detach on execve syscall //不太明白<br>  -D             run tracer process as a detached grandchild, not as parent<br>  -f             follow forks<br>  -ff            follow forks with output into separate files //跟踪创建进程输出到不同的文件，不太明白作用<br>  -I interruptible<br>     1:          no signals are blocked<br>     2:          fatal signals are blocked while decoding syscall (default)<br>     3:          fatal signals are always blocked (default if ‘-o FILE PROG’)<br>     4:          fatal signals and SIGTSTP (^Z) are always blocked<br>                 (useful to make ‘strace -o FILE PROG’ not stop on ^Z)<br>Startup:<br>  -E var         remove var from the environment for command<br>  -E var=val     put var=val in the environment for command<br>  -p pid         trace process with process id PID, may be repeated<br>  -u username    run command as username handling setuid and/or setgid<br>Miscellaneous:<br>  -d             enable debug output to stderr<br>  -v             verbose mode: print unabbreviated argv, stat, termios, etc. args<br>  -h             print help message<br>  -V             print version<br> 2.python使用strace实践</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">#!&#x2F;bin&#x2F;python3</span><br><span class="line">def test():</span><br><span class="line">    print(&quot;ouba&quot;)</span><br><span class="line">    import pdb</span><br><span class="line">    pdb.set_trace()</span><br><span class="line">    test2(30)</span><br><span class="line">    test2(10)</span><br><span class="line">    a&#x3D;Person(33)</span><br><span class="line">    b&#x3D;a</span><br><span class="line">    print(&quot;end&quot;)</span><br><span class="line">def test2(num):</span><br><span class="line">    for i in range(num):</span><br><span class="line">        print(&quot;num is %s&quot;%i)</span><br><span class="line">class Person(object):</span><br><span class="line">    def __init__(self, age):</span><br><span class="line">        self.age &#x3D; age</span><br><span class="line">        print(self.age)</span><br><span class="line">test()</span><br></pre></td></tr></table></figure>
+<p>该脚本从第四行开始进入pdb调试,pdb help<br>Documented commands (type help <topic>):<br>========================================<br>EOF    bt         cont      enable  jump  pp       run      unt<br>a      c          continue  exit    l     q        s        until<br>alias  cl         d         h       list  quit     step     up<br>args   clear      debug     help    n     r        tbreak   w<br>b      commands   disable   ignore  next  restart  u        whatis<br>break  condition  down      j       p     return   unalias  where<br>Miscellaneous help topics:<br>==========================<br>exec  pdb<br>Undocumented commands:<br>======================<br>retval  rv<br>其中s是单步调试，n是块步进，list列出11行及当前代码行，p打印变量</p>
+<p>3.常用的系统调用<br>系统调用函数分类：<br>进程管理<br>fork 创建一个新进程<br>clone 按指定条件创建子进程<br>execve 运行可执行文件<br>pause 进程将处于阻塞状态<br>wait 等待子进程终止<br>waitpid 等待指定子进程终止<br>文件和设备访问</p>
+<p>open 打开文件<br>creat 创建新文件<br>close<br>read<br>pread 对文件随机读<br>pwrite 对文件随机写<br>poll I/O多路转换<br>truncate 截断文件</p>
+<p>文件系统操作<br>access 确定文件的可存取性<br>chmod 确定文件的可存取性<br>chown 改变文件的属组或用户组<br>chroot 改变根目录<br>stat 获取文件状态信息<br>lstat 同stat<br>getdents 读取目录项<br>mkdir 创建目录<br>link 创建链接</p>
+<p>内存管理<br>mmap 映射虚拟内存页<br>sync 将内存缓冲区数据写回硬盘<br>socket控制<br>socketcall socket系统调用<br>socket 建立socket<br>bind 绑定socket到端口<br>connect 连接远程主机<br>send 通过socket发送信息<br>sendto 发送UDP信息<br>sendmsg 参见send<br>listen 监听socket端口<br>select 对多路同步I/O进行轮询</p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/operation/" rel="tag"># operation</a>
+              <a href="/tags/strace/" rel="tag"># strace</a>
+              <a href="/tags/troubleshooting/" rel="tag"># troubleshooting</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/05/15/oracle-rac/" rel="prev" title="oracle-rac">
+      <i class="fa fa-chevron-left"></i> oracle-rac
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/05/20/awr-analyse/" rel="next" title="awr-analyse">
+      awr-analyse <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="肖贝"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">肖贝</p>
+  <div class="site-description" itemprop="description">培养优秀的习惯</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">肖贝</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+<script>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              leancloudSelector(url).innerText = 'Counter not initialized! More info at console err msg.';
+              console.error('ATTENTION! LeanCloud counter has security bug, see how to solve it here: https://github.com/theme-next/hexo-leancloud-counter-security. \n However, you can still use LeanCloud without security, by setting `security` option to `false`.');
+            
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    let { app_id, app_key, server_url } = {"enable":true,"app_id":"WHjb4q09Dvc200WnyNGQeLmB-gzGzoHsz","app_key":"KNRespEK9Y3yFiulmGkF95gF","server_url":null,"security":true};
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    let api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

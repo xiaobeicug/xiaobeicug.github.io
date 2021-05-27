@@ -28,7 +28,7 @@
 <meta property="og:description" content="《go语言实战》读书笔记">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-03-26T03:43:57.000Z">
-<meta property="article:modified_time" content="2021-04-16T14:18:24.764Z">
+<meta property="article:modified_time" content="2021-05-23T15:01:10.394Z">
 <meta property="article:author" content="肖贝">
 <meta property="article:tag" content="go">
 <meta property="article:tag" content="high performance">
@@ -206,7 +206,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-04-16 22:18:24" itemprop="dateModified" datetime="2021-04-16T22:18:24+08:00">2021-04-16</time>
+                <time title="修改时间：2021-05-23 23:01:10" itemprop="dateModified" datetime="2021-05-23T23:01:10+08:00">2021-05-23</time>
               </span>
 
           
@@ -232,7 +232,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">def func(): #外部函数</span><br><span class="line">	a&#x3D;1</span><br><span class="line">	print(&quot;this is func&quot;)</span><br><span class="line">	def func1(num):#内部函数</span><br><span class="line">		print(&quot;this is func1&quot;)</span><br><span class="line">		print(num+1)</span><br><span class="line">	return func1   #返回函数集装箱，对象函数名等</span><br><span class="line">var&#x3D;func()</span><br><span class="line">var(3)</span><br></pre></td></tr></table></figure>
 <p>另一个概念：装饰器-执行func之前先执行装饰器函数，不影响原有函数的功能，还能添加新功能</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">def func2(func):&#x2F;&#x2F;外部闭包函数参数</span><br><span class="line">	def func3():</span><br><span class="line">		print(&#39;aaabbb&#39;)</span><br><span class="line">		return func() &#x2F;&#x2F;返回函数调用，执行之后的结构</span><br><span class="line">	return func3</span><br><span class="line"></span><br><span class="line">@func2</span><br><span class="line">def myprint():</span><br><span class="line">	print(&quot;lalala&quot;)</span><br><span class="line"></span><br><span class="line">myprint()</span><br></pre></td></tr></table></figure>
-<p>goroutin</p>
+<p>2.Go的一些特性<br>Go的基础部分实现得不错:有垃圾回收、包系统、-等公民函数、词法作用域、系统调用接口,还有默认用UTF-8编码的不可变字符串。但相对来说，它的语言特性不多，而且不太会增加新特性了。比如，它没有隐式数值类型强制转换，没有构造或析构函数,没有运算符重载，没有形参默认值，没有继承，没有泛型，没有异常，没有宏，没有函数注解，没有线程局部存储。这门语言成熟而且稳定，并且保证兼容更早版本:在旧版本的Go语言中写的程序，可以在新版本的编译器和标准库下编译与运行。<br>3.slice<br>for _,arg:=range os.Args[1:]{…}<br>每次迭代，range产生一对值：range 产生一对值:索引和这个索引处元素的值。这个例子里，我们不需要索引，但是语法上range循环需要处理，因此也必须处理索引。一个主意是我们将索引赋予一个临时变量(如temp)然后忽略它，但是Go不允许存在无用的临时变量，不然会出现编译错误。<br>4.main函数也运行在goroutine中<br>当一个goroutine试图在一个通道上进行发送或接收操作时，它会阻塞，直到另一个goroutine试图进行接收或发送操作才传递值，并开始处理两个goroutine。本例中，每fetch在通道ch上发送一个值(ch &lt;- expression), main 函数接收它们( &lt;-ch)。由main来处理所有的输出确保了每个goroutine作为一个整体单元处理，这样就避免了两个goroutine同时完成造成输出交织所带来的风险。<br>5.生存空间<br>如果一个实体在函数中声明，它只在函数局部有效。如果声明在函数外，它将对包里面的所有源文件可见。实体第-一个字母的大小写决定其可见性是否跨包。如果名称以大写字母的开头，它是导出的，意味着它对包外是可见和可访问的，可以被自己包之外的其他程序所引用，像fmt包中的Printf。包名本身总是由小写字母组成。<br>6.len长度的细节<br>尽管Go具备无符号整型数和相关算术运算，也尽管某些量值不可能为负，但是我们往<br>往还采用有符号整型数，如数组的长度(即便直观上明显更应该选用uint)。下例从后向前<br>输出奖牌名称，循环里用到了内置的len函数，它返回有符号整数:<br>medals := []string{“gold”, “silver”, “bronze” }<br>fori:=len(medals)-1;i&gt;=0;i–{<br>fmt . Println(medals[i]) // “bronze”, “silver”, “gold”<br>}<br>相反，假若len返回的结果是无符号整数，就会导致严重错误，因为i随之也成为uint<br>型，根据定义，条件i&gt;=0将恒成立。第3轮迭代后，有i==0，语句i–使得i变为uint型<br>的最大值(例如，可能为264-1)，而非-1，导致medals[i]试图越界访问元素，超出slice<br>范围，引发运行失败或宕机</p>
 
     </div>
 
@@ -351,7 +351,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-count">28</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -360,7 +360,7 @@
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-count">41</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
